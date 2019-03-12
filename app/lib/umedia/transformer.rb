@@ -19,17 +19,6 @@ module Umedia
       end
     end
 
-    class FirstViewerTypeFormatter
-      def self.format(value)
-        pages = value.fetch('page', [])
-        if !pages.empty?
-          ViewerMap.new(record: pages.first).viewer
-        else
-          ViewerMap.new(record: value).viewer
-        end
-      end
-    end
-
     class ViewerTypeFormatter
       def self.format(value)
         ViewerMap.new(record: value).viewer
@@ -209,7 +198,6 @@ module Umedia
         {dest_path: 'page_count', origin_path: '/', formatters: [PageCountFormatter]},
         {dest_path: 'record_type', origin_path: 'record_type', formatters: []},
         {dest_path: 'parent_id', origin_path: 'parent_id', formatters: [CDMDEXER::StripFormatter]},
-        {dest_path: 'first_viewer_type', origin_path: '/', formatters: [FirstViewerTypeFormatter]},
         {dest_path: 'viewer_type', origin_path: '/', formatters: [ViewerTypeFormatter]},
         # child_index is provided by CDMDEXER; children are assigned the order in
         # which they were received from the CDM API
