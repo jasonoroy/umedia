@@ -1,6 +1,3 @@
-require 'sidekiq/testing'
-Sidekiq::Testing.inline!
-
 namespace :ingest do
   desc 'Index Collection (name, desc) metadata'
   task :collection_metadata, [:set_spec] => :environment  do |t, args|
