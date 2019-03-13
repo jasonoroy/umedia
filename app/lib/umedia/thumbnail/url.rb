@@ -6,6 +6,7 @@ module Umedia
     # A wrapper around the multiple ways we generate thumb urls
     class Url
       attr_reader :item,
+                  :viewer_type,
                   :iiif_thumb,
                   :image_url_klass,
                   :kaltura_audio_url_klass,
@@ -13,6 +14,7 @@ module Umedia
                   :pdf_url_klass,
                   :cdn_uri
       def initialize(item: Parhelion::Item.new,
+                     viewer_type: :MISSING_VIEWER_TYPE,
                      iiif_thumb: false,
                      image_url_klass: ImageUrl,
                      kaltura_audio_url_klass: KalturaAudioUrl,
@@ -20,6 +22,7 @@ module Umedia
                      pdf_url_klass: PdfUrl,
                      cdn_uri: ENV['UMEDIA_NAILER_CDN_URI'])
         @item = item
+        @viewer_type = viewer_type
         @iiif_thumb = iiif_thumb
         @image_url_klass = image_url_klass
         @kaltura_audio_url_klass = kaltura_audio_url_klass
@@ -74,10 +77,6 @@ module Umedia
 
       def is_parent?
         @is_parent ||= item.field_page_count.value > 0
-      end
-
-      def viewer_type
-        !is_parent? ? item.field_viewer_type.value : item.field_first_viewer_type.value
       end
     end
   end

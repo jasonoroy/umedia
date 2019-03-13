@@ -4,13 +4,14 @@ module Parhelion
   module Viewers
     # Convert a Parhelion item into a viewer
     class Map
-      attr_reader :item
-      def initialize(item: Item.new)
+      attr_reader :item, :viewer_type
+      def initialize(item: Item.new, viewer_type: :MISSING_TYPE)
         @item = item
+        @viewer_type = viewer_type
       end
 
       def to_viewer
-        mappings.fetch(item.field_first_viewer_type.value)
+        mappings.fetch(viewer_type)
       end
 
       private

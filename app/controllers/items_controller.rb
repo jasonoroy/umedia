@@ -17,6 +17,7 @@ class ItemsController < SearchesController
     @item ||= ItemPresenter.new(item, view_context)
     @sidebar ||= ViewerSidebarPresenter.new(children, view_context)
     @mlt_items = mlt_items
+    @viewer_type = viewer_type
     respond_to do |format|
       format.html
       format.json { @json_item = json_item }
@@ -53,34 +54,45 @@ class ItemsController < SearchesController
     end
   end
 
-  def children
-    @children ||= search(search_params.merge(q: items_params.fetch(:query, ''), rows: 5000))
+  def viewer_type
+    if first_child
+      first_child
+    else
+      item
+    end.field_viewer_type.value
   end
 
-  def search(params)
-    Umedia::ChildSearch.new(parent_id: id,
-                            # Attachments are things like transcripts; these
-                            # exist only on kaltura records or items that have
-                            # been explicitly set at the designated attachment.
-                            # We do not therefore want attachments to be
-                            # counted in sidebar queries
-                            include_attachments: false,
-                            search_config: Parhelion::SearchConfig.new(params))
+  def first_child
+    children.items.first
+  end
+
+  def children
+    @children ||=
+      Umedia::ChildSearch.new(parent_id: id,
+                              # Attachments are things like transcripts; these
+                              # exist only on kaltura records or items that have
+                              # been explicitly set at the designated attachment.
+                              # We do not therefore want attachments to be
+                              # counted in sidebar queries
+                              include_attachments: false,
+                              search_config: search_config)
+  end
+
+  def search_config
+    Parhelion::SearchConfig.new({
+      page: child_page_num,
+      # we only need the first result of a sidebar query; this is passed to
+      # viewer_controller.js so that it knows which child to display on load
+      rows: 1,
+      fl: '*'
+    }.merge(q: items_params.fetch(:query, ''), rows: 5000))
   end
 
   def child_page_num
     params.fetch(:child_page, 1)
   end
 
-  def search_params
-    {
-      page: child_page_num,
-      # we only need the first result of a sidebar query; this is passed to
-      # viewer_controller.js so that it knows which child to display on load
-      rows: 1,
-      fl: '*'
-    }
-  end
+
 
   def id
     params[:id]

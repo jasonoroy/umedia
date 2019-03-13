@@ -5,7 +5,9 @@ class ViewersController < ApplicationController
   end
 
   def viewer_item
-    @viewer_doc ||= Parhelion::Viewers::Map.new(item: active_doc).to_viewer
+    @viewer_doc ||=
+      Parhelion::Viewers::Map.new(item: active_doc,
+                                  viewer_type: viewer_type).to_viewer
   end
 
   def active_doc
@@ -24,14 +26,38 @@ class ViewersController < ApplicationController
     end
   end
 
-  def children
-    Rails.cache.fetch("compound_children_complete/#{params.fetch(:id)}") do
-      Umedia::ChildSearch.new(parent_id: params.fetch(:id), fl: '*').items
+  def viewer_type
+    if first_child
+      first_child
+    else
+      primary_item
+    end.field_viewer_type.value
+  end
+
+  def first_child
+    Rails.cache.fetch("first_compound_child/#{params.fetch(:id)}") do
+      Umedia::ChildSearch.new(parent_id: params.fetch(:id),
+        # Attachments are things like transcripts; these
+        # exist only on kaltura records or items that have
+        # been explicitly set at the designated attachment.
+        # We do not therefore want attachments to be
+        # counted in sidebar queries
+        include_attachments: false,
+        search_config: Parhelion::SearchConfig.new(search_params)).items.first
     end
   end
 
+  # We only need the first row
+  def search_params
+    {
+      page: 0,
+      rows: 1,
+      fl: 'viewer_type'
+    }
+  end
+
   def primary_item
-    @doc ||= item(params.fetch(:id))
+    @primary_item ||= item(params.fetch(:id))
   end
 
   def child_id
